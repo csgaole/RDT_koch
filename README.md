@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # RDT-1B: a Diffusion Foundation Model for Bimanual Manipulation
 
 ### 📝[Paper](https://arxiv.org/pdf/2410.07864) | 🌍[Project Page](https://rdt-robotics.github.io/rdt-robotics/) | 🤗[Model](https://huggingface.co/robotics-diffusion-transformer/rdt-1b) | 🛢️[Data](https://huggingface.co/datasets/robotics-diffusion-transformer/rdt-ft-data)
@@ -270,3 +271,6 @@ Thank you!
 ## License
 
 All the code, model weights, and data are licensed under [MIT license](./LICENSE).
+=======
+# RDT_koch
+>>>>>>> 09db1a92336d5c74f8b4f63b3585e4228ead375e
