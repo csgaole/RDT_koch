@@ -182,3 +182,4 @@ wandb/
 # Distributed leaning
 hostfile.txt
 .deepspeed_env
+.DS_Store
