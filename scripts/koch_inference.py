@@ -23,7 +23,7 @@ from lerobot.common.utils.utils import init_hydra_config
 
 # sys.path.append("./")
 
-CAMERA_NAMES = ['cam_high', 'cam_wrist']
+CAMERA_NAMES = ['cam_high', 'cam_wrist', 'cam_side']
 
 observation_window = None
 
@@ -86,11 +86,17 @@ def get_robot_observation(args, robot):
     observation = robot.capture_observation() # Return obs_dict: {'observation.state': state, 'observation.images.{name}': images[name]}
     
     # TODO: check the observation.images keys
-    img_ext = observation['observation.images.phone']
+    img_ext = observation['observation.images.laptop']
     img_wrist = observation['observation.images.phone1']
+    img_ext_side = observation['observation.images.phone']
     joint_state = observation['observation.state']
 
-    return (img_ext, img_wrist, joint_state)
+    img_ext = img_ext.numpy()
+    img_wrist = img_wrist.numpy()
+    img_ext_side = img_ext_side.numpy()
+    joint_state = joint_state.numpy()
+
+    return (img_ext, img_wrist, img_ext_side, joint_state)
 
 
 # Update the observation window buffer
@@ -114,14 +120,16 @@ def update_observation_window(args, config, robot):
                     {
                         config["camera_names"][0]: None,
                         config["camera_names"][1]: None,
+                        config["camera_names"][2]: None,
                     },
             }
         )
         
-    img_ext, img_wrist, joint_state = get_robot_observation(args,robot)
+    img_ext, img_wrist, img_ext_side, joint_state = get_robot_observation(args,robot)
 
     img_ext = jpeg_mapping(img_ext)
     img_wrist = jpeg_mapping(img_wrist)
+    img_ext_side = jpeg_mapping(img_ext_side)
     
     qpos = torch.from_numpy(joint_state).float().cuda()
     observation_window.append(
@@ -131,6 +139,7 @@ def update_observation_window(args, config, robot):
                 {
                     config["camera_names"][0]: img_ext,
                     config["camera_names"][1]: img_wrist,
+                    config["camera_names"][2]: img_ext_side,
                 },
         }
     )
@@ -149,11 +158,11 @@ def inference_fn(args, config, policy, t):
         image_arrs = [
             observation_window[-2]['images'][config['camera_names'][0]],
             observation_window[-2]['images'][config['camera_names'][1]],
-            # observation_window[-2]['images'][config['camera_names'][2]],
+            observation_window[-2]['images'][config['camera_names'][2]],
             
             observation_window[-1]['images'][config['camera_names'][0]],
             observation_window[-1]['images'][config['camera_names'][1]],
-            # observation_window[-1]['images'][config['camera_names'][2]]
+            observation_window[-1]['images'][config['camera_names'][2]]
         ]
         
         # fetch debug images in sequence [front, right, left]
@@ -187,8 +196,9 @@ def inference_fn(args, config, policy, t):
             images=images,
             text_embeds=lang_embeddings 
         ).squeeze(0).cpu().numpy()
-        # print(f"inference_actions: {actions.squeeze()}")
-        
+        print(f"inference_actions: {actions.squeeze()}")
+        print('action length:', len(actions))
+
         print(f"Model inference time: {time.time() - time1} s")
         
         # print(f"Finish inference_thread_fn: t={t}")
@@ -201,7 +211,7 @@ def model_inference(args, config, robot):
     
     # Load rdt model
     policy = make_policy(args)
-    
+
     lang_dict = torch.load(args.lang_embeddings_path)
     print(f"Running with instruction: \"{lang_dict['instruction']}\" from \"{lang_dict['name']}\"")
     lang_embeddings = lang_dict["embeddings"]
@@ -211,8 +221,8 @@ def model_inference(args, config, robot):
 
     # Initialize position of the puppet arm
     # TODO: determine the initial robot state
-    state0 = []
-    state1 = []
+    state0 = torch.tensor([0.0,130.0,110.0,50.0,0.0,35.0])
+    state1 = torch.tensor([0.0,130.0,110.0,50.0,0.0,35.0])
     robot.send_action(state0)
     input("Press enter to continue")
     robot.send_action(state1)
@@ -241,12 +251,14 @@ def model_inference(args, config, robot):
                 if t % chunk_size == 0:
                     # Start inference
                     action_buffer = inference_fn(args, config, policy, t).copy()
+                    # action_buffer[-1] = action_buffer[-2]
                 
                 raw_action = action_buffer[t % chunk_size]
                 action = raw_action
+
                 # Interpolate the original action sequence
                 if args.use_actions_interpolation:
-                    # print(f"Time {t}, pre {pre_action}, act {action}")
+                    print(f"Time {t}, pre {pre_action}, act {action}")
                     interp_actions = interpolate_action(args, pre_action, action)
                 else:
                     interp_actions = action[np.newaxis, :]
@@ -254,13 +266,16 @@ def model_inference(args, config, robot):
                 for act in interp_actions:
                     # Execute the action
                     if not args.disable_puppet_arm:
-                        robot.send_action(act)
+                        robot.send_action(torch.tensor(act))
+
+                        print("Published Step", t)
+                        print(f"doing action: {act}")
                 
                     # rate.sleep()
                     # print(f"doing action: {act}")
                 t += 1
                 
-                print("Published Step", t)
+                # print("Published Step", t)
                 pre_action = action.copy()
 
 
@@ -313,7 +328,7 @@ def get_arguments():
                         default=64, required=False)
     parser.add_argument('--arm_steps_length', action='store', type=float, 
                         help='The maximum change allowed for each joint per timestep',
-                        default=[10, 10, 10, 10, 10, 10], required=False)
+                        default=[0.1, 0.1, 0.1, 0.1, 0.1, 0.1], required=False)
 
     parser.add_argument('--use_actions_interpolation', action='store_true',
                         help='Whether to interpolate the actions if the difference is too large',
@@ -366,6 +381,9 @@ def main():
 
     robot_cfg = init_hydra_config(robot_path, robot_overrides)
     robot = make_robot(robot_cfg)
+
+    if not robot.is_connected:
+        robot.connect()
 
     # Model inference and control
     model_inference(args, config, robot)

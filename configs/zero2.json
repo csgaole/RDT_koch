@@ -1,10 +1,10 @@
 {
     "bf16": {
-        "enabled": "auto"
+        "enabled": false
     },
-    "train_micro_batch_size_per_gpu": "auto",
-    "train_batch_size": "auto",
-    "gradient_accumulation_steps": "auto",
+    "train_micro_batch_size_per_gpu": 16,
+    "train_batch_size": 16,
+    "gradient_accumulation_steps": 2,
     "zero_optimization": {
         "stage": 2,
         "overlap_comm": true,

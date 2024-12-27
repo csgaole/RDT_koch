@@ -170,14 +170,24 @@ class RoboticDiffusionTransformerModel(object):
         """
         
         # TODO: The gripper scale factor should be adjusted according to the robot
-        gripper_scale_factor = 3.14
+        # gripper_scale_factor = 3.14
         
-        # Rescale the gripper to the range of [0, 1]
-        joints = joints / torch.tensor(
-            [[[1, 1, 1, 1, 1, gripper_scale_factor]]],
-            device=joints.device, dtype=joints.dtype
-        )
+        # # Rescale the gripper to the range of [0, 1]
+        # joints = joints / torch.tensor(
+        #     [[[1, 1, 1, 1, 1, gripper_scale_factor]]],
+        #     device=joints.device, dtype=joints.dtype
+        # )
+
+        # 将 joints 从度数转换为弧度
+        joints = torch.deg2rad(joints)
+
+        # Rescale gripper to [0, 1]
+        min_gripper_leader = torch.deg2rad(-11.0)
+        max_gripper_leader = torch.deg2rad(55.8)
+        joints[:, :, -1] = (joints[:, :, -1] - min_gripper_leader) / (max_gripper_leader - min_gripper_leader)
         
+#        joints = torch.tensor(joints, device=joints.device, dtype=joints.dtype)
+        # joints = joints.clone().detach().to(device=joints.device, dtype=joints.dtype)        
         B, N, _ = joints.shape
         state = torch.zeros(
             (B, N, self.args["model"]["state_token_dim"]), 
@@ -213,13 +223,22 @@ class RoboticDiffusionTransformerModel(object):
         # for Mobile ALOHA robot
 
         # TODO: The gripper scale factor should be adjusted according to the robot
-        gripper_scale_factor = 3.14
+        # gripper_scale_factor = 3.14
 
-        joints = joints * torch.tensor(
-            [[[1, 1, 1, 1, 1, gripper_scale_factor]]],
-            device=joints.device, dtype=joints.dtype
-        )
-        
+        # joints = joints * torch.tensor(
+        #     [[[1, 1, 1, 1, 1, gripper_scale_factor]]],
+        #     device=joints.device, dtype=joints.dtype
+        # )
+
+        # Rescale gripper to original range
+        min_gripper_follower = torch.deg2rad(-6.7)
+        max_gripper_follower = torch.deg2rad(54.4)
+        joints[:, :, -1] = joints[:, :, -1] * (max_gripper_follower - min_gripper_follower) + min_gripper_follower
+#        joints = torch.tensor(joints, device=joints.device, dtype=joints.dtype)
+        # joints = joints.clone().detach().to(device=joints.device, dtype=joints.dtype)
+
+        joints = torch.rad2deg(joints)
+
         return joints
 
     @torch.no_grad()

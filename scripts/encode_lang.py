@@ -12,8 +12,8 @@ CONFIG_PATH = "configs/base.yaml"
 SAVE_DIR = "outs/"
 
 # Modify this to your task name and instruction
-TASK_NAME = "handover_pan"
-INSTRUCTION = "Pick up the black marker on the right and put it into the packaging box on the left."
+TASK_NAME = "pick_and_place_cap"
+INSTRUCTION = "Pick up the gray cap on the right and put it into the packaging box on the left."
 
 # Note: if your GPU VRAM is less than 24GB, 
 # it is recommanded to enable offloading by specifying an offload directory.

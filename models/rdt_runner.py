@@ -15,7 +15,7 @@ from models.rdt.model import RDT
 class RDTRunner(
         nn.Module, 
         CompatiblePyTorchModelHubMixin, 
-        repo_url="https://huggingface.co/robotics-diffusion-transformer/rdt-1b"
+        repo_url="https://huggingface.co/robotics-diffusion-transformer/rdt-170m"
     ):
     def __init__(self, *, action_dim, pred_horizon, config, 
                  lang_token_dim, img_token_dim, state_token_dim, 
@@ -42,18 +42,18 @@ class RDTRunner(
             config['lang_adaptor'], 
             in_features=lang_token_dim, 
             out_features=hidden_size
-        )
+        ).to(dtype=torch.bfloat16)
         self.img_adaptor = self.build_condition_adapter(
             config['img_adaptor'], 
             in_features=img_token_dim, 
             out_features=hidden_size
-        )
+        ).to(dtype=torch.bfloat16)
         # A `state` refers to an action or a proprioception vector
         self.state_adaptor = self.build_condition_adapter(
             config['state_adaptor'], 
             in_features=state_token_dim * 2,    # state + state mask (indicator)
             out_features=hidden_size
-        )
+        ).to(dtype=torch.bfloat16)
         
         # Create the noise scheduler
         noise_scheduler_config = config['noise_scheduler']
