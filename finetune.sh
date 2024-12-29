@@ -9,7 +9,7 @@ export NCCL_SINGLE_PROCESS=1
 
 export TEXT_ENCODER_NAME="google/t5-v1_1-xxl"
 export VISION_ENCODER_NAME="google/siglip-so400m-patch14-384"
-export OUTPUT_DIR="./checkpoints/rdt-finetune-1b-pick-and-place-2"
+export OUTPUT_DIR="./checkpoints/rdt-finetune-1b-pick-and-place-3"
 export CFLAGS="-I/usr/include"
 export LDFLAGS="-L/usr/lib/x86_64-linux-gnu"
 export CUTLASS_PATH="/home/gao/cutlass"

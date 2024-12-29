@@ -182,9 +182,9 @@ class RoboticDiffusionTransformerModel(object):
         joints = torch.deg2rad(joints)
 
         # Rescale gripper to [0, 1]
-        min_gripper_leader = torch.deg2rad(-11.0)
-        max_gripper_leader = torch.deg2rad(55.8)
-        joints[:, :, -1] = (joints[:, :, -1] - min_gripper_leader) / (max_gripper_leader - min_gripper_leader)
+        min_gripper_follower = torch.deg2rad(-6.7)
+        max_gripper_follower = torch.deg2rad(54.4)
+        joints[:, :, -1] = (joints[:, :, -1] - min_gripper_follower) / (max_gripper_follower - min_gripper_follower)
         
 #        joints = torch.tensor(joints, device=joints.device, dtype=joints.dtype)
         # joints = joints.clone().detach().to(device=joints.device, dtype=joints.dtype)        
