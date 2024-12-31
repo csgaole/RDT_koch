@@ -34,7 +34,7 @@ accelerate launch main.py \
     --sample_batch_size=2 \
     --max_train_steps=150000 \
     --checkpointing_period=5000 \
-    --sample_period=2500 \
+    --sample_period=1000 \
     --checkpoints_total_limit=40 \
     --lr_scheduler="constant" \
     --learning_rate=1e-4 \
@@ -46,7 +46,7 @@ accelerate launch main.py \
     --load_from_hdf5 \
     --report_to=wandb \
     --precomp_lang_embed \
-    # --resume_from_checkpoint="checkpoint-127000" \
+    --resume_from_checkpoint="checkpoint-105000" \
     # ...
 
 # deepspeed --hostfile=hostfile.txt main.py \

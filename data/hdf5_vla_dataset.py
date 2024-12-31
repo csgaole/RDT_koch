@@ -118,8 +118,8 @@ class HDF5VLADataset:
             num_steps = qpos.shape[0]
 
             # [Optional] We drop too-short episode
-            if num_steps < 128:
-                return False, None
+            # if num_steps < 128:
+            #     return False, None
 
             # [Optional] We skip the first few still steps
             EPS = 1e-2
@@ -266,8 +266,8 @@ class HDF5VLADataset:
             qpos = f['observation.state'][:]
             num_steps = qpos.shape[0]
             # [Optional] We drop too-short episode
-            if num_steps < 128:
-                return False, None
+            # if num_steps < 128:
+            #     return False, None
 
             # [Optional] We skip the first few still steps
             EPS = 1e-2

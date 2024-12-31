@@ -42,7 +42,7 @@ class RoboticDiffusionTransformerModel(object):
         device='cuda',
         dtype=torch.bfloat16,
         image_size=None,
-        control_frequency=25, #TODO: determine control frequency for Koch robot
+        control_frequency=30,
         pretrained=None,
         pretrained_vision_encoder_name_or_path=None,
     ):
@@ -168,9 +168,7 @@ class RoboticDiffusionTransformerModel(object):
         Returns:
             state (torch.Tensor): The formatted vector for RDT ([B, N, 128]). 
         """
-        
-        # TODO: The gripper scale factor should be adjusted according to the robot
-        # gripper_scale_factor = 3.14
+    
         
         # # Rescale the gripper to the range of [0, 1]
         # joints = joints / torch.tensor(
@@ -182,8 +180,10 @@ class RoboticDiffusionTransformerModel(object):
         joints = torch.deg2rad(joints)
 
         # Rescale gripper to [0, 1]
-        min_gripper_follower = torch.deg2rad(-6.7)
-        max_gripper_follower = torch.deg2rad(54.4)
+        # min_gripper_follower = torch.deg2rad(-6.7)
+        min_gripper_follower = torch.deg2rad(torch.tensor(-6.7))  # GL: change to tensor
+        # max_gripper_follower = torch.deg2rad(54.4)
+        max_gripper_follower = torch.deg2rad(torch.tensor(54.4))
         joints[:, :, -1] = (joints[:, :, -1] - min_gripper_follower) / (max_gripper_follower - min_gripper_follower)
         
 #        joints = torch.tensor(joints, device=joints.device, dtype=joints.dtype)
@@ -222,17 +222,16 @@ class RoboticDiffusionTransformerModel(object):
         # Note that the action range and proprioception range are different
         # for Mobile ALOHA robot
 
-        # TODO: The gripper scale factor should be adjusted according to the robot
-        # gripper_scale_factor = 3.14
-
         # joints = joints * torch.tensor(
         #     [[[1, 1, 1, 1, 1, gripper_scale_factor]]],
         #     device=joints.device, dtype=joints.dtype
         # )
 
         # Rescale gripper to original range
-        min_gripper_follower = torch.deg2rad(-6.7)
-        max_gripper_follower = torch.deg2rad(54.4)
+        # min_gripper_follower = torch.deg2rad(-6.7)
+        # max_gripper_follower = torch.deg2rad(54.4)
+        min_gripper_follower = torch.deg2rad(torch.tensor(-6.7))    # GL：change to tensor
+        max_gripper_follower = torch.deg2rad(torch.tensor(54.4))
         joints[:, :, -1] = joints[:, :, -1] * (max_gripper_follower - min_gripper_follower) + min_gripper_follower
 #        joints = torch.tensor(joints, device=joints.device, dtype=joints.dtype)
         # joints = joints.clone().detach().to(device=joints.device, dtype=joints.dtype)

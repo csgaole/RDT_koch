@@ -240,10 +240,14 @@ def model_inference(args, config, robot):
             # The current time step
             t = 0
             # rate = rospy.Rate(args.publish_rate)
-    
+            frequency = args.publish_rate
+            interval = 1.0 / frequency
+
             action_buffer = np.zeros([chunk_size, config['state_dim']])
-            
+
             while t < max_publish_step:
+                start_time = time.time()
+                
                 # Update observation window
                 update_observation_window(args, config, robot)
                 
@@ -271,7 +275,10 @@ def model_inference(args, config, robot):
                         print("Published Step", t)
                         print(f"doing action: {act}")
                 
-                    # rate.sleep()
+                    # Calculate elapsed time and sleep for the remaining interval
+                    elapsed_time = time.time() - start_time
+                    sleep_time = max(0, interval - elapsed_time)
+                    time.sleep(sleep_time)
                     # print(f"doing action: {act}")
                 t += 1
                 
@@ -321,7 +328,7 @@ def get_arguments():
                         default=30, required=False)
     parser.add_argument('--ctrl_freq', action='store', type=int, 
                         help='The control frequency of the robot',
-                        default=25, required=False)
+                        default=30, required=False)
     
     parser.add_argument('--chunk_size', action='store', type=int, 
                         help='Action chunk size',
